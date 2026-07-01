@@ -1,9 +1,9 @@
 {
   "name": "family-game-site",
   "version": "1.0.0",
-  "description": "온 가족이 각자 핸드폰으로 함께 즐기는 실시간 게임 사이트",
+  "description": "온가족이 각자 핸드폰으로 함께 즐기는 실시간 게임 사이트",
   "main": "server.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
