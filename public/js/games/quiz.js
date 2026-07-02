@@ -63,3 +63,6 @@ window.GameClients.quiz = {
     });
   },
 };
+
+// 가족 퀴즈는 같은 화면/이벤트를 사용한다.
+window.GameClients.familyquiz = window.GameClients.quiz;

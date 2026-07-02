@@ -1,0 +1,13 @@
+# Render 배포 설정 (https://render.com)
+# GitHub 저장소를 연결하면 이 파일을 읽어 자동으로 서비스를 만듭니다.
+services:
+  - type: web
+    name: family-game
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
