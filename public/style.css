@@ -241,3 +241,53 @@ canvas#board { display: block; width: 100%; height: auto; background: #fff; }
 .fade-in { animation: fade 0.3s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(8px);} to {opacity:1; transform:none;} }
 .big-emoji { font-size: 3rem; text-align: center; }
+
+/* ── 두더지 잡기 ─────────────────────── */
+.mole-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mole-cell {
+  aspect-ratio: 1; border: none; border-radius: 16px; background: #3a2c8c;
+  position: relative; overflow: hidden; cursor: pointer; font-family: inherit;
+}
+.mole-cell .hole { position: absolute; left: 15%; bottom: 10%; width: 70%; height: 30%; background: #1a1440; border-radius: 50%; }
+.mole-cell.up { background: #4a3aa8; }
+.mole-cell.up::after { content: '🐹'; position: absolute; left: 0; right: 0; top: 22%; font-size: 2.6rem; animation: pop 0.15s ease; }
+.mole-cell.bonk::after { content: '💥'; top: 22%; }
+@keyframes pop { from { transform: translateY(40%) scale(.6);} to { transform: none;} }
+
+/* ── 기억력(사이먼) ──────────────────── */
+.mem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.mem-pad { aspect-ratio: 1.3; border: none; border-radius: 18px; cursor: pointer; opacity: 0.55; transition: opacity .1s, transform .1s; }
+.mem-pad.lit { opacity: 1; transform: scale(1.04); box-shadow: 0 0 24px #fff8; }
+
+/* ── 주사위 보드 ─────────────────────── */
+.board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 8px 0; }
+.tile {
+  aspect-ratio: 1; background: var(--card2); border-radius: 8px; position: relative;
+  display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;
+  flex-wrap: wrap; gap: 1px; padding: 2px;
+}
+.tile.start { background: #2e6b4a; } .tile.goal { background: var(--accent); color: #2a1c00; }
+.tile.up { background: #2e6b4a; } .tile.down { background: #8a3a4a; }
+.tile .ti { opacity: 0.7; position: absolute; top: 2px; left: 3px; }
+.tile .sp { position: absolute; bottom: 1px; right: 2px; font-size: 0.6rem; }
+.pawn { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 0.7rem; z-index: 2; }
+.pawn.me { background: var(--accent); color: #2a1c00; }
+
+/* ── 빙고 ────────────────────────────── */
+.bingo-grid { display: grid; gap: 6px; }
+.bingo-cell {
+  aspect-ratio: 1; border: 2px solid var(--card2); border-radius: 10px; background: var(--bg2);
+  color: var(--text); font-size: 1.15rem; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.bingo-cell.drawable { border-color: var(--accent); animation: pulse 1s infinite; }
+.bingo-cell.on { background: var(--good); border-color: var(--good); color: #fff; }
+@keyframes pulse { 50% { background: rgba(255,210,63,0.2);} }
+
+/* ── 스피드 타이핑 ───────────────────── */
+.type-target { background: var(--bg2); border-radius: 12px; padding: 18px; font-size: 1.3rem; font-weight: 700; text-align: center; line-height: 1.5; }
+
+/* ── 텔레스트레이션 결과 ─────────────── */
+.tel-chain { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.tel-item { display: flex; flex-direction: column; gap: 4px; }
+.tel-phrase { background: var(--bg2); border-radius: 10px; padding: 10px; font-weight: 700; font-size: 1.1rem; }
+.tel-img { width: 100%; border-radius: 10px; background: #fff; }
