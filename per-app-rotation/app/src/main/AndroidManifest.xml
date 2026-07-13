@@ -53,6 +53,19 @@
             android:noHistory="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <!-- Home-screen widget that toggles the whole-screen rotation. -->
+        <receiver
+            android:name=".widget.RotationWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.miracle.perapprotation.ACTION_TOGGLE_ROTATION" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/rotation_widget_info" />
+        </receiver>
+
         <service
             android:name=".service.RotationAccessibilityService"
             android:exported="false"

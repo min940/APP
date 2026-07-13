@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import com.miracle.perapprotation.ui.screens.BatteryExemptionScreen
 import com.miracle.perapprotation.ui.screens.LogScreen
 import com.miracle.perapprotation.ui.screens.MainScreen
 import com.miracle.perapprotation.ui.screens.OnboardingScreen
+import com.miracle.perapprotation.ui.screens.RotationToggleScreen
 import com.miracle.perapprotation.ui.theme.PerAppRotationTheme
 import com.miracle.perapprotation.util.PermissionUtils
 import com.miracle.perapprotation.util.ShortcutHelper
@@ -52,7 +54,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Tab { HOME, LOG, BATTERY }
+private enum class Tab { ROTATE, HOME, LOG, BATTERY }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,7 +83,7 @@ private fun AppRoot() {
 
     // Onboarding is shown only until the user completes it once (persisted in DataStore).
     var onboardingDismissed by rememberSaveable { mutableStateOf(false) }
-    var selectedTab by rememberSaveable { mutableStateOf(Tab.HOME) }
+    var selectedTab by rememberSaveable { mutableStateOf(Tab.ROTATE) }
 
     if (!onboardingDone && !onboardingDismissed) {
         Scaffold(
@@ -111,10 +113,16 @@ private fun AppRoot() {
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
+                    selected = selectedTab == Tab.ROTATE,
+                    onClick = { selectedTab = Tab.ROTATE },
+                    icon = { Icon(Icons.Filled.ScreenRotation, contentDescription = null) },
+                    label = { Text("회전") }
+                )
+                NavigationBarItem(
                     selected = selectedTab == Tab.HOME,
                     onClick = { selectedTab = Tab.HOME },
-                    icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-                    label = { Text("홈") }
+                    icon = { Icon(Icons.Filled.Apps, contentDescription = null) },
+                    label = { Text("앱별") }
                 )
                 NavigationBarItem(
                     selected = selectedTab == Tab.LOG,
@@ -133,6 +141,11 @@ private fun AppRoot() {
     ) { inner ->
         Box(Modifier.fillMaxSize().padding(inner)) {
             when (selectedTab) {
+                Tab.ROTATE -> RotationToggleScreen(
+                    writeSettingsGranted = permissions.writeSettings,
+                    onGrantWriteSettings = { PermissionUtils.openWriteSettings(context) }
+                )
+
                 Tab.HOME -> MainScreen(
                     permissions = permissions,
                     serviceConnected = serviceConnected,

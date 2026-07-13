@@ -1,0 +1,41 @@
+package com.miracle.perapprotation.data
+
+import android.content.Context
+
+/**
+ * Simple synchronous settings for the global rotation toggle / widget, backed by SharedPreferences
+ * (synchronous access is convenient from the widget's broadcast receiver).
+ *
+ * - [onOrientation]: orientation applied when the toggle is ON (default landscape)
+ * - [offOrientation]: orientation applied when the toggle is OFF (default portrait; DEFAULT = auto-rotate)
+ * - [isOn]: current toggle state
+ */
+class RotationSettings(context: Context) {
+
+    private val prefs =
+        context.applicationContext.getSharedPreferences("rotation_toggle", Context.MODE_PRIVATE)
+
+    var onOrientation: Orientation
+        get() = Orientation.fromNameOrDefault(prefs.getString(KEY_ON, Orientation.LANDSCAPE.name))
+        set(value) {
+            prefs.edit().putString(KEY_ON, value.name).apply()
+        }
+
+    var offOrientation: Orientation
+        get() = Orientation.fromNameOrDefault(prefs.getString(KEY_OFF, Orientation.PORTRAIT.name))
+        set(value) {
+            prefs.edit().putString(KEY_OFF, value.name).apply()
+        }
+
+    var isOn: Boolean
+        get() = prefs.getBoolean(KEY_IS_ON, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_IS_ON, value).apply()
+        }
+
+    private companion object {
+        const val KEY_ON = "on_orientation"
+        const val KEY_OFF = "off_orientation"
+        const val KEY_IS_ON = "is_on"
+    }
+}

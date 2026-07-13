@@ -1,6 +1,7 @@
 package com.miracle.perapprotation.data
 
 import android.content.pm.ActivityInfo
+import android.view.Surface
 
 /**
  * The orientation a given app should be forced into while it is in the foreground.
@@ -24,6 +25,18 @@ enum class Orientation(
     /** True when this rule requires the overlay to be active. */
     val requiresOverlay: Boolean
         get() = this != DEFAULT
+
+    /**
+     * The [Surface] rotation used for the global rotation engine (phone natural orientation is
+     * portrait, so ROTATION_90 == landscape). Null for [DEFAULT] (means "let the system decide").
+     */
+    val surfaceRotation: Int?
+        get() = when (this) {
+            PORTRAIT -> Surface.ROTATION_0
+            LANDSCAPE -> Surface.ROTATION_90
+            REVERSE_LANDSCAPE -> Surface.ROTATION_270
+            DEFAULT -> null
+        }
 
     companion object {
         fun fromNameOrDefault(name: String?): Orientation =
