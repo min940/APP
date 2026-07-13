@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Rotation rules live in DataStore preferences and are safe to back up. -->
+</full-backup-content>

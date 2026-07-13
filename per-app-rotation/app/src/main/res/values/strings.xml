@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">앱별 회전</string>
+    <string name="accessibility_service_label">앱별 회전 감지</string>
+    <string name="accessibility_service_description">지정한 앱을 실행할 때만 화면을 원하는 방향으로 회전시킵니다. 화면 내용은 읽지 않고 최상단 앱의 패키지명만 사용합니다.</string>
+</resources>
