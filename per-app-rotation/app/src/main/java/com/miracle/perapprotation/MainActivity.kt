@@ -1,6 +1,7 @@
 package com.miracle.perapprotation
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.ui.MainViewModel
 import com.miracle.perapprotation.ui.screens.BatteryExemptionScreen
 import com.miracle.perapprotation.ui.screens.LogScreen
@@ -35,6 +37,7 @@ import com.miracle.perapprotation.ui.screens.MainScreen
 import com.miracle.perapprotation.ui.screens.OnboardingScreen
 import com.miracle.perapprotation.ui.theme.PerAppRotationTheme
 import com.miracle.perapprotation.util.PermissionUtils
+import com.miracle.perapprotation.util.ShortcutHelper
 
 class MainActivity : ComponentActivity() {
 
@@ -147,6 +150,16 @@ private fun AppRoot() {
                     onGrantWriteSettings = { PermissionUtils.openWriteSettings(context) },
                     onOrientationSelected = { app, orientation ->
                         vm.setOrientation(app.label, app.packageName, orientation)
+                    },
+                    onAddShortcut = { app ->
+                        val orientation = rules[app.packageName] ?: Orientation.DEFAULT
+                        val ok = ShortcutHelper.requestPin(context, app, orientation.label)
+                        Toast.makeText(
+                            context,
+                            if (ok) "'${app.label} ${orientation.label}' 바로가기를 홈 화면에 추가합니다."
+                            else "현재 런처가 바로가기 추가를 지원하지 않습니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
 

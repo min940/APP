@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
+import androidx.compose.material.icons.filled.AddToHomeScreen
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +43,7 @@ fun AppRow(
     app: InstalledApp,
     current: Orientation,
     onOrientationSelected: (Orientation) -> Unit,
+    onAddShortcut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -65,7 +69,16 @@ fun AppRow(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(Modifier.width(8.dp))
+        // Offer a home-screen shortcut once the app has a rotation rule.
+        AnimatedVisibility(visible = current.requiresOverlay) {
+            IconButton(onClick = onAddShortcut) {
+                Icon(
+                    imageVector = Icons.Filled.AddToHomeScreen,
+                    contentDescription = "홈 화면 바로가기 추가",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
         OrientationDropdown(current = current, onSelected = onOrientationSelected)
     }
 }

@@ -51,6 +51,7 @@ fun MainScreen(
     onToggleForceRotation: (Boolean) -> Unit,
     onGrantWriteSettings: () -> Unit,
     onOrientationSelected: (InstalledApp, Orientation) -> Unit,
+    onAddShortcut: (InstalledApp) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val activeLabel = activePackage?.let { pkg ->
@@ -123,7 +124,8 @@ fun MainScreen(
                     AppRow(
                         app = app,
                         current = rules[app.packageName] ?: Orientation.DEFAULT,
-                        onOrientationSelected = { onOrientationSelected(app, it) }
+                        onOrientationSelected = { onOrientationSelected(app, it) },
+                        onAddShortcut = { onAddShortcut(app) }
                     )
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)

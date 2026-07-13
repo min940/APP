@@ -47,7 +47,8 @@ private fun MainScreenPreview() {
                 onToggleSystemApps = {},
                 onToggleForceRotation = {},
                 onGrantWriteSettings = {},
-                onOrientationSelected = { _, _ -> }
+                onOrientationSelected = { _, _ -> },
+                onAddShortcut = {}
             )
         }
     }
@@ -73,7 +74,8 @@ private fun MainScreenActivePreview() {
                 onToggleSystemApps = {},
                 onToggleForceRotation = {},
                 onGrantWriteSettings = {},
-                onOrientationSelected = { _, _ -> }
+                onOrientationSelected = { _, _ -> },
+                onAddShortcut = {}
             )
         }
     }

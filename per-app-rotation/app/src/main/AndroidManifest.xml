@@ -44,6 +44,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Invisible trampoline fired by a pinned home-screen shortcut. Exported so the
+             launcher can start it; it only launches the target app by package name. -->
+        <activity
+            android:name=".LaunchShortcutActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <service
             android:name=".service.RotationAccessibilityService"
             android:exported="false"
