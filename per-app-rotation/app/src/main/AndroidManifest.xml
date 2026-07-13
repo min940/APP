@@ -14,6 +14,11 @@
          put the accessibility service to sleep. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- Optional "forced rotation" engine: write system USER_ROTATION for apps that ignore the
+         overlay (e.g. Chrome Remote Desktop). Granted in-app via the settings screen, no adb. -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
     <!-- NOTE: INTERNET / ACCESS_NETWORK_STATE are intentionally NOT declared.
          This is a fully offline utility. -->
 

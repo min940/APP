@@ -26,8 +26,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.ui.PermissionState
+import androidx.compose.material3.Button
+import androidx.compose.ui.text.font.FontWeight
 import com.miracle.perapprotation.ui.components.AppRow
 import com.miracle.perapprotation.ui.components.EmptyState
+import com.miracle.perapprotation.ui.components.SectionCard
 import com.miracle.perapprotation.ui.components.StatusBanner
 import com.miracle.perapprotation.util.InstalledApp
 
@@ -42,8 +45,11 @@ fun MainScreen(
     isLoading: Boolean,
     searchQuery: String,
     showSystemApps: Boolean,
+    forceRotation: Boolean,
     onSearchChange: (String) -> Unit,
     onToggleSystemApps: (Boolean) -> Unit,
+    onToggleForceRotation: (Boolean) -> Unit,
+    onGrantWriteSettings: () -> Unit,
     onOrientationSelected: (InstalledApp, Orientation) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -66,6 +72,14 @@ fun MainScreen(
             serviceConnected = serviceConnected,
             activeLabel = activeLabel,
             activeOrientation = activeOrientation
+        )
+
+        Spacer(Modifier.height(12.dp))
+        ForceRotationCard(
+            enabled = forceRotation,
+            writeSettingsGranted = permissions.writeSettings,
+            onToggle = onToggleForceRotation,
+            onGrant = onGrantWriteSettings
         )
 
         Spacer(Modifier.height(12.dp))
@@ -115,6 +129,44 @@ fun MainScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ForceRotationCard(
+    enabled: Boolean,
+    writeSettingsGranted: Boolean,
+    onToggle: (Boolean) -> Unit,
+    onGrant: () -> Unit
+) {
+    SectionCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "강제 회전 모드",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "리모트 데스크톱처럼 방향을 고정하는 앱을 시스템 회전으로 강제합니다.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = onToggle)
+        }
+        if (enabled && !writeSettingsGranted) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                text = "'설정 수정 허용' 권한이 필요합니다. (PC 연결 불필요)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onGrant, modifier = Modifier.fillMaxWidth()) {
+                Text("설정 수정 허용하기")
             }
         }
     }

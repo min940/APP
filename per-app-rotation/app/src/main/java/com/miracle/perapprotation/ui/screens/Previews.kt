@@ -42,8 +42,11 @@ private fun MainScreenPreview() {
                 isLoading = false,
                 searchQuery = "",
                 showSystemApps = false,
+                forceRotation = false,
                 onSearchChange = {},
                 onToggleSystemApps = {},
+                onToggleForceRotation = {},
+                onGrantWriteSettings = {},
                 onOrientationSelected = { _, _ -> }
             )
         }
@@ -65,8 +68,11 @@ private fun MainScreenActivePreview() {
                 isLoading = false,
                 searchQuery = "",
                 showSystemApps = false,
+                forceRotation = true,
                 onSearchChange = {},
                 onToggleSystemApps = {},
+                onToggleForceRotation = {},
+                onGrantWriteSettings = {},
                 onOrientationSelected = { _, _ -> }
             )
         }

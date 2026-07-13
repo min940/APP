@@ -66,6 +66,7 @@ private fun AppRoot() {
     val serviceConnected by vm.serviceConnected.collectAsStateWithLifecycle()
     val activePackage by vm.activePackage.collectAsStateWithLifecycle()
     val activeOrientation by vm.activeOrientation.collectAsStateWithLifecycle()
+    val forceRotation by vm.forceRotation.collectAsStateWithLifecycle()
     val logs by vm.logs.collectAsStateWithLifecycle()
 
     // Refresh permission state whenever we return to the app.
@@ -133,8 +134,11 @@ private fun AppRoot() {
                     isLoading = isLoading,
                     searchQuery = searchQuery,
                     showSystemApps = showSystemApps,
+                    forceRotation = forceRotation,
                     onSearchChange = vm::onSearchChange,
                     onToggleSystemApps = vm::onToggleSystemApps,
+                    onToggleForceRotation = vm::setForceRotation,
+                    onGrantWriteSettings = { PermissionUtils.openWriteSettings(context) },
                     onOrientationSelected = { app, orientation ->
                         vm.setOrientation(app.label, app.packageName, orientation)
                     }

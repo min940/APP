@@ -3,7 +3,8 @@ package com.miracle.perapprotation.ui
 data class PermissionState(
     val accessibility: Boolean = false,
     val overlay: Boolean = false,
-    val batteryExempt: Boolean = false
+    val batteryExempt: Boolean = false,
+    val writeSettings: Boolean = false
 ) {
     val allGranted: Boolean get() = accessibility && overlay && batteryExempt
 

@@ -38,6 +38,17 @@ object PermissionUtils {
         return pm.isIgnoringBatteryOptimizations(context.packageName)
     }
 
+    /** True when the app may write system settings (needed for the forced-rotation engine). */
+    fun canWriteSettings(context: Context): Boolean = Settings.System.canWrite(context)
+
+    fun openWriteSettings(context: Context) {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_WRITE_SETTINGS,
+            Uri.parse("package:${context.packageName}")
+        ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+        context.startActivity(intent)
+    }
+
     fun openAccessibilitySettings(context: Context) {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

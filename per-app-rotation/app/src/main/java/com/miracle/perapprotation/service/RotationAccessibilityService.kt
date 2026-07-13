@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 class RotationAccessibilityService : AccessibilityService() {
 
     private lateinit var controller: OverlayOrientationController
+    private lateinit var forcedController: ForcedRotationController
     private lateinit var ruleRepository: RuleRepository
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -28,11 +29,16 @@ class RotationAccessibilityService : AccessibilityService() {
     @Volatile
     private var rules: Map<String, Orientation> = emptyMap()
 
+    /** Whether the stronger forced-system-rotation engine is enabled. */
+    @Volatile
+    private var forceRotation: Boolean = false
+
     private var lastPackage: String? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         controller = OverlayOrientationController(this)
+        forcedController = ForcedRotationController(this)
         ruleRepository = RuleRepository.get(this)
 
         // Keep the rule cache in sync with DataStore.
@@ -40,6 +46,14 @@ class RotationAccessibilityService : AccessibilityService() {
             ruleRepository.rulesFlow.collect { updated ->
                 rules = updated
                 // Re-evaluate the current foreground app against the new rules.
+                lastPackage?.let { evaluate(it, force = true) }
+            }
+        }
+
+        // Keep the force-rotation toggle in sync.
+        scope.launch {
+            ruleRepository.forceRotationFlow.collect { enabled ->
+                forceRotation = enabled
                 lastPackage?.let { evaluate(it, force = true) }
             }
         }
@@ -65,12 +79,15 @@ class RotationAccessibilityService : AccessibilityService() {
         try {
             if (orientation.requiresOverlay) {
                 controller.apply(orientation)
+                // Stronger engine for apps that ignore the overlay (opt-in).
+                if (forceRotation) forcedController.apply(orientation)
                 ServiceState.setActive(packageName, orientation)
-                LogRepository.info("$packageName → ${orientation.label} 적용")
+                LogRepository.info("$packageName → ${orientation.label} 적용${if (forceRotation) " (강제)" else ""}")
             } else {
                 // Not a target app: ALWAYS remove the overlay so the phone stays portrait
                 // and other apps' permission dialogs are not blocked.
                 controller.remove()
+                forcedController.restore()
                 if (ServiceState.activePackage.value != null || force) {
                     LogRepository.info("$packageName → 기본(세로) 복귀")
                 }
@@ -97,6 +114,7 @@ class RotationAccessibilityService : AccessibilityService() {
 
     private fun cleanup() {
         if (::controller.isInitialized) controller.remove()
+        if (::forcedController.isInitialized) forcedController.restore()
         ServiceState.setConnected(false)
         ServiceState.clearActive()
         scope.cancel()

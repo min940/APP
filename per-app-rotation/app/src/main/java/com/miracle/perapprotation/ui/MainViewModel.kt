@@ -47,6 +47,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             initialValue = emptyMap()
         )
 
+    // --- Forced-rotation engine toggle (persisted) ---
+    val forceRotation: StateFlow<Boolean> =
+        ruleRepository.forceRotationFlow.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
+
     // --- Live service status ---
     val serviceConnected: StateFlow<Boolean> = ServiceState.isServiceConnected
     val activePackage: StateFlow<String?> = ServiceState.activePackage
@@ -65,8 +73,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _permissions.value = PermissionState(
             accessibility = PermissionUtils.isAccessibilityEnabled(ctx),
             overlay = PermissionUtils.canDrawOverlays(ctx),
-            batteryExempt = PermissionUtils.isIgnoringBatteryOptimizations(ctx)
+            batteryExempt = PermissionUtils.isIgnoringBatteryOptimizations(ctx),
+            writeSettings = PermissionUtils.canWriteSettings(ctx)
         )
+    }
+
+    fun setForceRotation(enabled: Boolean) {
+        viewModelScope.launch {
+            ruleRepository.setForceRotation(enabled)
+            LogRepository.info(if (enabled) "강제 회전 모드 켜짐" else "강제 회전 모드 꺼짐")
+        }
     }
 
     fun loadApps() {
