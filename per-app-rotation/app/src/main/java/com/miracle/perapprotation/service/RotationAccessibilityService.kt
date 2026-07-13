@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.miracle.perapprotation.data.LogRepository
 import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.data.RuleRepository
+import com.miracle.perapprotation.widget.GlobalRotation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -51,6 +52,9 @@ class RotationAccessibilityService : AccessibilityService() {
     /** Re-assert job: some apps reset their orientation shortly after (re)launch. */
     private var reassertJob: Job? = null
 
+    /** Until this uptime (ms), ignore non-watched apps in linked mode (launch/rotation churn). */
+    private var watchSuppressUntil = 0L
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         controller = OverlayOrientationController(this)
@@ -91,6 +95,10 @@ class RotationAccessibilityService : AccessibilityService() {
         // wallpapers, and other transient system windows fire window-state-changed too, but
         // should not be treated as "the user left the target app".
         if (!isLaunchable(packageName)) return
+
+        // Linked-app (whole-screen) mode: a shortcut rotated the screen and launched a target app.
+        // Keep landscape while it is foreground; revert to portrait as soon as it leaves.
+        if (handleWatchedApp(packageName)) return
 
         // Phantom-event guard: right after forcing a rotation, the rotation itself makes
         // background windows (launcher, wallpaper) briefly report as foreground. While a forced
@@ -179,6 +187,40 @@ class RotationAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Linked-app mode handler. Returns true if the event was handled (caller should stop).
+     *
+     * While a target app (set by [WatchState] from the launch shortcut) is in the foreground, the
+     * whole screen is kept in landscape. As soon as another real app comes forward, the screen is
+     * reverted to portrait and watching stops. Launch/rotation churn right after starting is
+     * ignored via a short grace window.
+     */
+    private fun handleWatchedApp(packageName: String): Boolean {
+        val watched = WatchState.watchedPackage ?: return false
+        val now = SystemClock.uptimeMillis()
+
+        if (packageName == watched) {
+            // Keep the screen in landscape (recover if the app reset it).
+            GlobalRotation.apply(this, WatchState.landscapeOrientation)
+            watchSuppressUntil = now + WATCH_GRACE_MS
+            lastPackage = packageName
+            return true
+        }
+
+        // A different app is foreground. Ignore transient launch/rotation churn briefly.
+        val withinStartGrace = now - WatchState.startedUptime < WATCH_GRACE_MS
+        if (withinStartGrace || now < watchSuppressUntil) {
+            return true
+        }
+
+        // The watched app genuinely left the foreground → revert and stop watching.
+        GlobalRotation.apply(this, WatchState.revertOrientation)
+        LogRepository.info("$watched 종료 감지 → ${WatchState.revertOrientation.label} 복귀")
+        WatchState.stop()
+        lastPackage = packageName
+        return true
+    }
+
+    /**
      * Re-applies the forced rotation a few times shortly after a target app comes to the foreground.
      * Apps like Chrome Remote Desktop may reset their orientation on (re)launch; re-writing the same
      * USER_ROTATION value recovers from that without any visible flicker.
@@ -211,5 +253,6 @@ class RotationAccessibilityService : AccessibilityService() {
         private const val FORCED_GRACE_MS = 3000L
         private const val REASSERT_COUNT = 4
         private const val REASSERT_INTERVAL_MS = 500L
+        private const val WATCH_GRACE_MS = 2500L
     }
 }

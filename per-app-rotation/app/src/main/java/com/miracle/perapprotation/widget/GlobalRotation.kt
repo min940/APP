@@ -33,7 +33,6 @@ object GlobalRotation {
                 Settings.System.putInt(cr, Settings.System.ACCELEROMETER_ROTATION, 0)
                 Settings.System.putInt(cr, Settings.System.USER_ROTATION, rotation)
             }
-            LogRepository.success("전체 화면 → ${orientation.label}")
             true
         } catch (t: Throwable) {
             LogRepository.error("전체 회전 적용 실패: ${t.message}")
