@@ -40,8 +40,8 @@ class RotationAccessibilityService : AccessibilityService() {
     /** Home launcher package, resolved at connect time (used to ignore phantom rotation events). */
     private var homePackage: String? = null
 
-    /** Uptime (ms) of the last forced-rotation apply, for the phantom-event grace window. */
-    private var lastForcedApplyUptime = 0L
+    /** Until this uptime (ms), skip forced-rotation restores caused by post-rotation window churn. */
+    private var suppressRestoreUntilUptime = 0L
 
     /** Cache of packageName -> isLaunchable, to avoid repeated PackageManager queries. */
     private val launchableCache = HashMap<String, Boolean>()
@@ -89,13 +89,15 @@ class RotationAccessibilityService : AccessibilityService() {
         // should not be treated as "the user left the target app".
         if (!isLaunchable(packageName)) return
 
-        // Phantom-event guard: forcing a rotation makes background windows (the launcher,
-        // system UI) briefly fire window-state-changed. Ignore those for a short grace window
-        // so the forced rotation is not immediately reverted while the target app is still up.
-        if (forceRotation &&
+        // Phantom-event guard: right after forcing a rotation, the rotation itself makes
+        // background windows (launcher, wallpaper) briefly report as foreground. While a forced
+        // target is active and we are inside the grace window, ignore any non-target app WITHOUT
+        // updating lastPackage — so a genuine app switch after the grace window still restores.
+        val isTarget = rules[packageName]?.requiresOverlay == true
+        if (!isTarget &&
+            forceRotation &&
             ServiceState.activePackage.value != null &&
-            packageName == homePackage &&
-            SystemClock.uptimeMillis() - lastForcedApplyUptime < FORCED_GRACE_MS
+            SystemClock.uptimeMillis() < suppressRestoreUntilUptime
         ) {
             return
         }
@@ -112,7 +114,10 @@ class RotationAccessibilityService : AccessibilityService() {
                 // Stronger engine for apps that ignore the overlay (opt-in).
                 if (forceRotation) {
                     forcedController.apply(orientation)
-                    lastForcedApplyUptime = SystemClock.uptimeMillis()
+                    // Forcing a system rotation makes background windows (launcher, wallpaper)
+                    // briefly fire window-state-changed. Suppress restores for a grace window so
+                    // that phantom churn does not immediately revert the rotation.
+                    suppressRestoreUntilUptime = SystemClock.uptimeMillis() + FORCED_GRACE_MS
                 }
                 ServiceState.setActive(packageName, orientation)
                 LogRepository.info("$packageName → ${orientation.label} 적용${if (forceRotation) " (강제)" else ""}")
@@ -175,6 +180,6 @@ class RotationAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
-        private const val FORCED_GRACE_MS = 2500L
+        private const val FORCED_GRACE_MS = 3000L
     }
 }
