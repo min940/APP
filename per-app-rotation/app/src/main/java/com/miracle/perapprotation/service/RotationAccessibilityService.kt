@@ -1,6 +1,8 @@
 package com.miracle.perapprotation.service
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
+import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import com.miracle.perapprotation.data.LogRepository
 import com.miracle.perapprotation.data.Orientation
@@ -35,11 +37,21 @@ class RotationAccessibilityService : AccessibilityService() {
 
     private var lastPackage: String? = null
 
+    /** Home launcher package, resolved at connect time (used to ignore phantom rotation events). */
+    private var homePackage: String? = null
+
+    /** Uptime (ms) of the last forced-rotation apply, for the phantom-event grace window. */
+    private var lastForcedApplyUptime = 0L
+
+    /** Cache of packageName -> isLaunchable, to avoid repeated PackageManager queries. */
+    private val launchableCache = HashMap<String, Boolean>()
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         controller = OverlayOrientationController(this)
         forcedController = ForcedRotationController(this)
         ruleRepository = RuleRepository.get(this)
+        homePackage = resolveHomePackage()
 
         // Keep the rule cache in sync with DataStore.
         scope.launch {
@@ -68,8 +80,26 @@ class RotationAccessibilityService : AccessibilityService() {
         val packageName = event.packageName?.toString() ?: return
         // Ignore our own windows and system UI transients to reduce churn.
         if (packageName == this.packageName) return
+        if (packageName == SYSTEM_UI_PACKAGE) return
 
         if (packageName == lastPackage) return
+
+        // Only real launchable apps count as a foreground change. Keyboards (honeyboard),
+        // wallpapers, and other transient system windows fire window-state-changed too, but
+        // should not be treated as "the user left the target app".
+        if (!isLaunchable(packageName)) return
+
+        // Phantom-event guard: forcing a rotation makes background windows (the launcher,
+        // system UI) briefly fire window-state-changed. Ignore those for a short grace window
+        // so the forced rotation is not immediately reverted while the target app is still up.
+        if (forceRotation &&
+            ServiceState.activePackage.value != null &&
+            packageName == homePackage &&
+            SystemClock.uptimeMillis() - lastForcedApplyUptime < FORCED_GRACE_MS
+        ) {
+            return
+        }
+
         lastPackage = packageName
         evaluate(packageName, force = false)
     }
@@ -80,7 +110,10 @@ class RotationAccessibilityService : AccessibilityService() {
             if (orientation.requiresOverlay) {
                 controller.apply(orientation)
                 // Stronger engine for apps that ignore the overlay (opt-in).
-                if (forceRotation) forcedController.apply(orientation)
+                if (forceRotation) {
+                    forcedController.apply(orientation)
+                    lastForcedApplyUptime = SystemClock.uptimeMillis()
+                }
                 ServiceState.setActive(packageName, orientation)
                 LogRepository.info("$packageName → ${orientation.label} 적용${if (forceRotation) " (강제)" else ""}")
             } else {
@@ -119,5 +152,29 @@ class RotationAccessibilityService : AccessibilityService() {
         ServiceState.clearActive()
         scope.cancel()
         LogRepository.warning("접근성 서비스가 종료되었습니다.")
+    }
+
+    private fun resolveHomePackage(): String? = try {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        packageManager.resolveActivity(intent, 0)?.activityInfo?.packageName
+    } catch (_: Throwable) {
+        null
+    }
+
+    /** True for real launchable apps (and the home launcher). Cached per package. */
+    private fun isLaunchable(pkg: String): Boolean {
+        if (pkg == homePackage) return true
+        return launchableCache.getOrPut(pkg) {
+            try {
+                packageManager.getLaunchIntentForPackage(pkg) != null
+            } catch (_: Throwable) {
+                false
+            }
+        }
+    }
+
+    companion object {
+        private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
+        private const val FORCED_GRACE_MS = 2500L
     }
 }
