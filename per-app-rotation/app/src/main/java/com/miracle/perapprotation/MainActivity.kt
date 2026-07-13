@@ -68,6 +68,7 @@ private fun AppRoot() {
     val activeOrientation by vm.activeOrientation.collectAsStateWithLifecycle()
     val forceRotation by vm.forceRotation.collectAsStateWithLifecycle()
     val logs by vm.logs.collectAsStateWithLifecycle()
+    val onboardingDone by vm.onboardingDone.collectAsStateWithLifecycle()
 
     // Refresh permission state whenever we return to the app.
     androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
@@ -75,10 +76,11 @@ private fun AppRoot() {
         onPauseOrDispose { }
     }
 
+    // Onboarding is shown only until the user completes it once (persisted in DataStore).
     var onboardingDismissed by rememberSaveable { mutableStateOf(false) }
     var selectedTab by rememberSaveable { mutableStateOf(Tab.HOME) }
 
-    if (!onboardingDismissed) {
+    if (!onboardingDone && !onboardingDismissed) {
         Scaffold(
             topBar = { AppBar() }
         ) { inner ->
@@ -87,10 +89,14 @@ private fun AppRoot() {
                 onOpenAccessibility = { PermissionUtils.openAccessibilitySettings(context) },
                 onOpenOverlay = { PermissionUtils.openOverlaySettings(context) },
                 onOpenBattery = {
+                    vm.setOnboardingDone()
                     onboardingDismissed = true
                     selectedTab = Tab.BATTERY
                 },
-                onFinish = { onboardingDismissed = true },
+                onFinish = {
+                    vm.setOnboardingDone()
+                    onboardingDismissed = true
+                },
                 modifier = Modifier.padding(inner)
             )
         }

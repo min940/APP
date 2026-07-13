@@ -39,8 +39,9 @@ class ForcedRotationController(private val context: Context) {
             LogRepository.warning("강제 회전: '설정 수정 허용' 권한이 없어 적용하지 못했습니다.")
             return
         }
-        // Already forcing this exact orientation — nothing to do (avoids redundant writes/flicker).
-        if (applied && currentOrientation == orientation) return
+        // Note: we intentionally re-write even if we think it is already applied. Writing the same
+        // USER_ROTATION value causes no visible flicker, but it recovers from cases where the app
+        // or system changed the rotation behind our back (e.g. an app that re-locks on (re)launch).
         val rotation = orientation.toSurfaceRotation() ?: return
         try {
             val resolver = context.contentResolver

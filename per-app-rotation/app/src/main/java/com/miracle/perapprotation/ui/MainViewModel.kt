@@ -55,6 +55,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             initialValue = false
         )
 
+    // --- Onboarding completion (persisted so it doesn't reappear every launch) ---
+    val onboardingDone: StateFlow<Boolean> =
+        ruleRepository.onboardingDoneFlow.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = false
+        )
+
+    fun setOnboardingDone() {
+        viewModelScope.launch { ruleRepository.setOnboardingDone(true) }
+    }
+
     // --- Live service status ---
     val serviceConnected: StateFlow<Boolean> = ServiceState.isServiceConnected
     val activePackage: StateFlow<String?> = ServiceState.activePackage

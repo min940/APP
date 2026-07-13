@@ -22,8 +22,9 @@ private val Context.rotationDataStore: DataStore<Preferences> by preferencesData
  */
 class RuleRepository(private val appContext: Context) {
 
-    // Sentinel key (not a real package name) for the global force-rotation toggle.
+    // Sentinel keys (not real package names) for app-level settings.
     private val forceRotationKey = booleanPreferencesKey("__force_rotation_enabled__")
+    private val onboardingDoneKey = booleanPreferencesKey("__onboarding_done__")
 
     /** Emits the full rule map whenever it changes. */
     val rulesFlow: Flow<Map<String, Orientation>> =
@@ -45,6 +46,14 @@ class RuleRepository(private val appContext: Context) {
 
     suspend fun setForceRotation(enabled: Boolean) {
         appContext.rotationDataStore.edit { prefs -> prefs[forceRotationKey] = enabled }
+    }
+
+    /** Emits whether the user has completed (dismissed) the onboarding screen at least once. */
+    val onboardingDoneFlow: Flow<Boolean> =
+        appContext.rotationDataStore.data.map { prefs -> prefs[onboardingDoneKey] ?: false }
+
+    suspend fun setOnboardingDone(done: Boolean) {
+        appContext.rotationDataStore.edit { prefs -> prefs[onboardingDoneKey] = done }
     }
 
     suspend fun setRule(packageName: String, orientation: Orientation) {

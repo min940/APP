@@ -9,8 +9,10 @@ import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.data.RuleRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -45,6 +47,9 @@ class RotationAccessibilityService : AccessibilityService() {
 
     /** Cache of packageName -> isLaunchable, to avoid repeated PackageManager queries. */
     private val launchableCache = HashMap<String, Boolean>()
+
+    /** Re-assert job: some apps reset their orientation shortly after (re)launch. */
+    private var reassertJob: Job? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -119,6 +124,8 @@ class RotationAccessibilityService : AccessibilityService() {
                     // briefly fire window-state-changed. Suppress restores for a grace window so
                     // that phantom churn does not immediately revert the rotation.
                     suppressRestoreUntilUptime = SystemClock.uptimeMillis() + FORCED_GRACE_MS
+                    // Re-assert a few times: some apps reset their orientation shortly after launch.
+                    scheduleReassert(packageName, orientation)
                 }
                 ServiceState.setActive(packageName, orientation)
                 if (changed) {
@@ -128,6 +135,7 @@ class RotationAccessibilityService : AccessibilityService() {
                 // Not a target app: ALWAYS remove the overlay so the phone stays portrait
                 // and other apps' permission dialogs are not blocked.
                 val wasActive = ServiceState.activePackage.value != null
+                reassertJob?.cancel()
                 controller.remove()
                 forcedController.restore()
                 if (wasActive || force) {
@@ -170,6 +178,22 @@ class RotationAccessibilityService : AccessibilityService() {
         null
     }
 
+    /**
+     * Re-applies the forced rotation a few times shortly after a target app comes to the foreground.
+     * Apps like Chrome Remote Desktop may reset their orientation on (re)launch; re-writing the same
+     * USER_ROTATION value recovers from that without any visible flicker.
+     */
+    private fun scheduleReassert(packageName: String, orientation: Orientation) {
+        reassertJob?.cancel()
+        reassertJob = scope.launch {
+            repeat(REASSERT_COUNT) {
+                delay(REASSERT_INTERVAL_MS)
+                if (!forceRotation || ServiceState.activePackage.value != packageName) return@launch
+                forcedController.apply(orientation)
+            }
+        }
+    }
+
     /** True for real launchable apps (and the home launcher). Cached per package. */
     private fun isLaunchable(pkg: String): Boolean {
         if (pkg == homePackage) return true
@@ -185,5 +209,7 @@ class RotationAccessibilityService : AccessibilityService() {
     companion object {
         private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
         private const val FORCED_GRACE_MS = 3000L
+        private const val REASSERT_COUNT = 4
+        private const val REASSERT_INTERVAL_MS = 500L
     }
 }
