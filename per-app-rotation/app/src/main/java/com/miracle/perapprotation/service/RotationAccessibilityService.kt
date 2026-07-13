@@ -82,8 +82,6 @@ class RotationAccessibilityService : AccessibilityService() {
         if (packageName == this.packageName) return
         if (packageName == SYSTEM_UI_PACKAGE) return
 
-        if (packageName == lastPackage) return
-
         // Only real launchable apps count as a foreground change. Keyboards (honeyboard),
         // wallpapers, and other transient system windows fire window-state-changed too, but
         // should not be treated as "the user left the target app".
@@ -110,6 +108,9 @@ class RotationAccessibilityService : AccessibilityService() {
         val orientation = rules[packageName] ?: Orientation.DEFAULT
         try {
             if (orientation.requiresOverlay) {
+                // Re-applying is idempotent; only log when the active target/orientation changes.
+                val changed = ServiceState.activePackage.value != packageName ||
+                    ServiceState.activeOrientation.value != orientation
                 controller.apply(orientation)
                 // Stronger engine for apps that ignore the overlay (opt-in).
                 if (forceRotation) {
@@ -120,13 +121,16 @@ class RotationAccessibilityService : AccessibilityService() {
                     suppressRestoreUntilUptime = SystemClock.uptimeMillis() + FORCED_GRACE_MS
                 }
                 ServiceState.setActive(packageName, orientation)
-                LogRepository.info("$packageName → ${orientation.label} 적용${if (forceRotation) " (강제)" else ""}")
+                if (changed) {
+                    LogRepository.info("$packageName → ${orientation.label} 적용${if (forceRotation) " (강제)" else ""}")
+                }
             } else {
                 // Not a target app: ALWAYS remove the overlay so the phone stays portrait
                 // and other apps' permission dialogs are not blocked.
+                val wasActive = ServiceState.activePackage.value != null
                 controller.remove()
                 forcedController.restore()
-                if (ServiceState.activePackage.value != null || force) {
+                if (wasActive || force) {
                     LogRepository.info("$packageName → 기본(세로) 복귀")
                 }
                 ServiceState.clearActive()

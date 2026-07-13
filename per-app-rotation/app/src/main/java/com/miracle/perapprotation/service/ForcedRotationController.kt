@@ -24,6 +24,8 @@ class ForcedRotationController(private val context: Context) {
     private var applied = false
     /** Auto-rotate value observed before we first forced rotation, restored on [restore]. */
     private var savedAccelerometerRotation: Int? = null
+    /** Orientation currently forced, so repeated identical applies are cheap no-ops. */
+    private var currentOrientation: Orientation? = null
 
     fun canWrite(): Boolean = Settings.System.canWrite(context)
 
@@ -37,6 +39,8 @@ class ForcedRotationController(private val context: Context) {
             LogRepository.warning("강제 회전: '설정 수정 허용' 권한이 없어 적용하지 못했습니다.")
             return
         }
+        // Already forcing this exact orientation — nothing to do (avoids redundant writes/flicker).
+        if (applied && currentOrientation == orientation) return
         val rotation = orientation.toSurfaceRotation() ?: return
         try {
             val resolver = context.contentResolver
@@ -47,6 +51,7 @@ class ForcedRotationController(private val context: Context) {
             Settings.System.putInt(resolver, Settings.System.ACCELEROMETER_ROTATION, 0)
             Settings.System.putInt(resolver, Settings.System.USER_ROTATION, rotation)
             applied = true
+            currentOrientation = orientation
         } catch (t: Throwable) {
             LogRepository.error("강제 회전 적용 실패: ${t.message}")
         }
@@ -71,6 +76,7 @@ class ForcedRotationController(private val context: Context) {
         } finally {
             applied = false
             savedAccelerometerRotation = null
+            currentOrientation = null
         }
     }
 
