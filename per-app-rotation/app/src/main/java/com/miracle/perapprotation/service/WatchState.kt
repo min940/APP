@@ -29,14 +29,25 @@ object WatchState {
     var startedUptime: Long = 0L
         private set
 
+    /** True once the watched app has actually been seen in the foreground at least once. */
+    @Volatile
+    var seen: Boolean = false
+        private set
+
     fun start(packageName: String, landscape: Orientation, revert: Orientation) {
         watchedPackage = packageName
         landscapeOrientation = landscape
         revertOrientation = revert
         startedUptime = SystemClock.uptimeMillis()
+        seen = false
+    }
+
+    fun markSeen() {
+        seen = true
     }
 
     fun stop() {
         watchedPackage = null
+        seen = false
     }
 }

@@ -40,7 +40,9 @@ class LaunchShortcutActivity : ComponentActivity() {
             runBlocking { RuleRepository.get(this@LaunchShortcutActivity).rulesFlow.first()[pkg] }
         }.getOrNull()
         val landscape = ruleOrientation?.takeIf { it.requiresOverlay } ?: settings.onOrientation
-        val revert = settings.offOrientation
+        // Linked mode always returns to locked portrait on exit (per the requested behaviour),
+        // so leaving the app can't land on auto-rotate reverse-landscape.
+        val revert = Orientation.PORTRAIT
 
         // Rotate the whole screen now for an immediate effect (service keeps it in sync).
         if (GlobalRotation.canWrite(this)) {

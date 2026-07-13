@@ -201,20 +201,23 @@ class RotationAccessibilityService : AccessibilityService() {
         if (packageName == watched) {
             // Keep the screen in landscape (recover if the app reset it).
             GlobalRotation.apply(this, WatchState.landscapeOrientation)
-            watchSuppressUntil = now + WATCH_GRACE_MS
+            WatchState.markSeen()
+            // Only a short window to absorb the phantom churn caused by re-applying the rotation.
+            watchSuppressUntil = now + WATCH_POST_APPLY_MS
             lastPackage = packageName
             return true
         }
 
-        // A different app is foreground. Ignore transient launch/rotation churn briefly.
-        val withinStartGrace = now - WatchState.startedUptime < WATCH_GRACE_MS
+        // A different app is foreground. Ignore only the initial launch churn (before the app has
+        // been seen) and the brief post-apply phantom churn — otherwise revert immediately.
+        val withinStartGrace = !WatchState.seen && (now - WatchState.startedUptime < WATCH_START_GRACE_MS)
         if (withinStartGrace || now < watchSuppressUntil) {
             return true
         }
 
-        // The watched app genuinely left the foreground → revert and stop watching.
+        // The watched app left the foreground → revert to portrait immediately and stop watching.
         GlobalRotation.apply(this, WatchState.revertOrientation)
-        LogRepository.info("$watched 종료 감지 → ${WatchState.revertOrientation.label} 복귀")
+        LogRepository.info("$watched 이탈 → ${WatchState.revertOrientation.label} 복귀")
         WatchState.stop()
         lastPackage = packageName
         return true
@@ -253,6 +256,7 @@ class RotationAccessibilityService : AccessibilityService() {
         private const val FORCED_GRACE_MS = 3000L
         private const val REASSERT_COUNT = 4
         private const val REASSERT_INTERVAL_MS = 500L
-        private const val WATCH_GRACE_MS = 2500L
+        private const val WATCH_START_GRACE_MS = 1500L
+        private const val WATCH_POST_APPLY_MS = 800L
     }
 }
