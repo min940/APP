@@ -1,18 +1,13 @@
 {
-  "name": "family-game-site",
-  "version": "1.0.0",
-  "description": "온 가족이 각자 핸드폰으로 함께 즐기는 실시간 게임 사이트",
-  "main": "server.js",
+  "name": "app",
+  "version": "0.1.0",
+  "description": "새 앱",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node index.js"
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "express": "^4.19.2",
-    "socket.io": "^4.7.5"
   }
 }
