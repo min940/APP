@@ -1,0 +1,13 @@
+# Copy this file to local.properties (which is git-ignored) and fill in the values.
+# local.properties itself must NEVER be committed.
+
+# Android SDK location (Android Studio sets this automatically).
+sdk.dir=/path/to/Android/Sdk
+
+# --- Optional: release signing ---
+# Provide these only if you want `./gradlew assembleRelease` to produce a signed APK.
+# Keep the keystore file OUTSIDE the repo (or add it to .gitignore).
+#RELEASE_STORE_FILE=/absolute/path/to/release.jks
+#RELEASE_STORE_PASSWORD=your-store-password
+#RELEASE_KEY_ALIAS=your-key-alias
+#RELEASE_KEY_PASSWORD=your-key-password
