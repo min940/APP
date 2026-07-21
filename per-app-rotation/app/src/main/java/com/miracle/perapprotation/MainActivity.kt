@@ -24,6 +24,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -31,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.miracle.perapprotation.data.Orientation
+import com.miracle.perapprotation.data.RotationSettings
 import com.miracle.perapprotation.ui.MainViewModel
 import com.miracle.perapprotation.ui.screens.BatteryExemptionScreen
 import com.miracle.perapprotation.ui.screens.LogScreen
@@ -83,7 +85,18 @@ private fun AppRoot() {
 
     // Onboarding is shown only until the user completes it once (persisted in DataStore).
     var onboardingDismissed by rememberSaveable { mutableStateOf(false) }
-    var selectedTab by rememberSaveable { mutableStateOf(Tab.ROTATE) }
+
+    // Restore the last-used tab from persistent settings, and save it whenever it changes.
+    val rotationSettings = remember { RotationSettings(context) }
+    var selectedTab by rememberSaveable {
+        mutableStateOf(
+            runCatching { Tab.valueOf(rotationSettings.lastTab ?: Tab.ROTATE.name) }
+                .getOrDefault(Tab.ROTATE)
+        )
+    }
+    androidx.compose.runtime.LaunchedEffect(selectedTab) {
+        rotationSettings.lastTab = selectedTab.name
+    }
 
     if (!onboardingDone && !onboardingDismissed) {
         Scaffold(

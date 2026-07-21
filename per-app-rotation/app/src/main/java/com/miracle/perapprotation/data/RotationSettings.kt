@@ -33,9 +33,17 @@ class RotationSettings(context: Context) {
             prefs.edit().putBoolean(KEY_IS_ON, value).apply()
         }
 
+    /** The last tab the user was on, restored on next launch. */
+    var lastTab: String?
+        get() = prefs.getString(KEY_LAST_TAB, null)
+        set(value) {
+            prefs.edit().putString(KEY_LAST_TAB, value).apply()
+        }
+
     private companion object {
         const val KEY_ON = "on_orientation"
         const val KEY_OFF = "off_orientation"
         const val KEY_IS_ON = "is_on"
+        const val KEY_LAST_TAB = "last_tab"
     }
 }
