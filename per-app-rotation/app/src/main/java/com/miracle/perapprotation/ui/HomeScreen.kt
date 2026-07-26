@@ -106,11 +106,19 @@ fun HomeScreen(
             Text("지금 실행", style = MaterialTheme.typography.titleMedium)
         }
 
-        // 4. Widget how-to
-        Section(title = "홈 화면 위젯") {
+        // 4. Two ways to launch from the home screen
+        Section(title = "홈 화면에서 실행하기") {
             Text(
-                text = "홈 화면 빈 곳을 길게 누르기 → 위젯 → '자동회전 런처'를 홈에 배치하세요. " +
-                    "그 위젯을 누르면 자동 회전이 켜지고 등록한 앱이 실행됩니다.",
+                text = "① 실행 아이콘 (폴더·바로가기 모음에 넣기 좋음)\n" +
+                    "앱 서랍에 '자동회전 실행' 아이콘이 따로 있습니다. 일반 앱 아이콘이라 폴더에 넣거나 " +
+                    "바로가기 모음 앱에서 선택할 수 있고, 누르면 화면 없이 바로 실행됩니다.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = "② 위젯\n홈 화면 빈 곳을 길게 누르기 → 위젯 → '자동회전 런처' 배치. " +
+                    "등록한 앱 아이콘과 실행 상태가 함께 표시됩니다.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

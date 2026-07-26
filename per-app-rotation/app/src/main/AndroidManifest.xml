@@ -40,13 +40,33 @@
             </intent-filter>
         </activity>
 
-        <!-- Invisible trampoline started by the widget / shortcut. -->
+        <!-- Invisible trampoline started by the widget / shortcut / quick-launch icon. -->
         <activity
             android:name=".StartSessionActivity"
             android:exported="true"
             android:excludeFromRecents="true"
             android:noHistory="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!--
+            Second launcher entry that runs a session in one tap and shows no UI. Being a real
+            launcher icon (not a widget) it can be dropped into a folder or picked up by
+            shortcut-collection apps, while still sharing this app's permissions and the
+            exit-detection service.
+        -->
+        <activity-alias
+            android:name=".QuickLaunch"
+            android:targetActivity=".StartSessionActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:icon="@mipmap/ic_launcher_quick"
+            android:roundIcon="@mipmap/ic_launcher_quick_round"
+            android:label="@string/quick_launch_label">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <receiver
             android:name=".widget.StartWidgetProvider"

@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+        Quick-launch entry: a rotation arc above a dominant play mark — "rotate, then run".
+        Deliberately different from the main launcher icon so both are distinguishable in a folder.
+    -->
+    <group android:translateX="54" android:translateY="52">
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="6.5"
+            android:pathData="M -23.84,-12.68 A 27,27 0 0 1 23.84,-12.68" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M 29.00,-2.96 L 29.84,-15.87 L 17.84,-9.48 Z" />
+    </group>
+    <group android:translateX="54" android:translateY="68">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M -13,-13 L 13,0 L -13,13 Z" />
+    </group>
+</vector>

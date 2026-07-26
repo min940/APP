@@ -3,4 +3,5 @@
     <string name="accessibility_service_label">자동회전 런처 종료 감지</string>
     <string name="accessibility_service_description">등록한 앱이 화면에서 사라지면 자동 회전을 끄고 세로로 되돌립니다. 화면 내용은 읽지 않고 최상단 앱의 이름만 사용합니다.</string>
     <string name="widget_description">탭하면 자동 회전을 켜고 등록한 앱을 실행합니다.</string>
+    <string name="quick_launch_label">자동회전 실행</string>
 </resources>
