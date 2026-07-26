@@ -58,6 +58,17 @@ class ForcedRotationController(private val context: Context) {
         }
     }
 
+    /**
+     * Drops internal state WITHOUT touching system settings. Used when another engine (the
+     * linked-app / widget whole-screen rotation) takes ownership of the screen orientation, so this
+     * controller never restores a stale value over it.
+     */
+    fun forget() {
+        applied = false
+        savedAccelerometerRotation = null
+        currentOrientation = null
+    }
+
     /** Restores the user's original auto-rotate setting and returns to portrait. */
     fun restore() {
         if (!applied && savedAccelerometerRotation == null) return

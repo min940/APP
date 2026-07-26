@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.data.RotationSettings
+import com.miracle.perapprotation.ui.components.DiagnosticsCard
 import com.miracle.perapprotation.ui.components.SectionCard
 import com.miracle.perapprotation.util.PermissionUtils
 import com.miracle.perapprotation.widget.GlobalRotation
@@ -157,6 +158,9 @@ fun RotationToggleScreen(
                 }
             }
         }
+
+        // Live diagnostics — shows exactly which prerequisite is missing.
+        DiagnosticsCard()
 
         // Linked-app (shortcut) behaviour
         SectionCard {

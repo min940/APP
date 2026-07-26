@@ -7,11 +7,8 @@ import androidx.activity.ComponentActivity
 import com.miracle.perapprotation.data.LogRepository
 import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.data.RotationSettings
-import com.miracle.perapprotation.data.RuleRepository
 import com.miracle.perapprotation.service.WatchState
 import com.miracle.perapprotation.widget.GlobalRotation
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 
 /**
  * Invisible "trampoline" launched by a pinned home-screen shortcut. It:
@@ -35,15 +32,13 @@ class LaunchShortcutActivity : ComponentActivity() {
 
     private fun launchLinked(pkg: String) {
         val settings = RotationSettings(this)
-        // Landscape = the app's own rule if set, else the global "on" orientation.
-        val ruleOrientation = runCatching {
-            runBlocking { RuleRepository.get(this@LaunchShortcutActivity).rulesFlow.first()[pkg] }
-        }.getOrNull()
-        // Either turn auto-rotate ON while the app is open (DEFAULT), or lock a fixed landscape.
+        // Read only synchronous SharedPreferences here — never block the main thread on DataStore,
+        // which previously could stall the shortcut and make it appear to do nothing.
         val landscape = if (settings.linkedUseAutoRotate) {
+            // Turn auto-rotate ON while the app is open.
             Orientation.DEFAULT
         } else {
-            ruleOrientation?.takeIf { it.requiresOverlay } ?: settings.onOrientation
+            settings.onOrientation
         }
         // Linked mode always returns to locked portrait on exit (per the requested behaviour),
         // so leaving the app can't land on auto-rotate reverse-landscape.
@@ -51,8 +46,10 @@ class LaunchShortcutActivity : ComponentActivity() {
 
         // Rotate the whole screen now for an immediate effect (service keeps it in sync).
         if (GlobalRotation.canWrite(this)) {
-            GlobalRotation.apply(this, landscape)
+            val ok = GlobalRotation.apply(this, landscape)
+            if (!ok) LogRepository.error("바로가기: 회전 적용 실패")
         } else {
+            LogRepository.error("바로가기: '설정 수정 허용' 권한이 없어 회전하지 못했습니다.")
             Toast.makeText(this, "앱에서 '설정 수정 허용'을 먼저 켜주세요.", Toast.LENGTH_LONG).show()
         }
 

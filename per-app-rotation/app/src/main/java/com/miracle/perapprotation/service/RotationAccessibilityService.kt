@@ -198,6 +198,11 @@ class RotationAccessibilityService : AccessibilityService() {
         val watched = WatchState.watchedPackage ?: return false
         val now = SystemClock.uptimeMillis()
 
+        // Linked mode owns the screen orientation: stop any per-app forced-rotation re-assert loop
+        // and drop its saved state so the two engines cannot fight each other.
+        reassertJob?.cancel()
+        forcedController.forget()
+
         if (packageName == watched) {
             // Keep the screen in landscape (recover if the app reset it).
             GlobalRotation.apply(this, WatchState.landscapeOrientation)
