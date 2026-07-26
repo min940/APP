@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Only window-state-changes are observed so we can read the foreground package name.
-    canRetrieveWindowContent is false: we never read screen content, only the package name.
+    Only window-state-changes are observed, so the service can tell when the registered app leaves
+    the foreground. canRetrieveWindowContent is false: screen content is never read, only the
+    package name of the foreground app.
 -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged"
