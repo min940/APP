@@ -75,13 +75,21 @@ fun MainScreen(
             activeOrientation = activeOrientation
         )
 
-        Spacer(Modifier.height(12.dp))
-        ForceRotationCard(
-            enabled = forceRotation,
-            writeSettingsGranted = permissions.writeSettings,
-            onToggle = onToggleForceRotation,
-            onGrant = onGrantWriteSettings
-        )
+        // Rotation is driven purely by each app's orientation rule below — no extra mode switch.
+        if (!permissions.writeSettings) {
+            Spacer(Modifier.height(12.dp))
+            SectionCard {
+                Text(
+                    text = "'설정 수정 허용' 권한이 필요합니다. (PC 연결 불필요)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = onGrantWriteSettings, modifier = Modifier.fillMaxWidth()) {
+                    Text("설정 수정 허용하기")
+                }
+            }
+        }
 
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
@@ -131,44 +139,6 @@ fun MainScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ForceRotationCard(
-    enabled: Boolean,
-    writeSettingsGranted: Boolean,
-    onToggle: (Boolean) -> Unit,
-    onGrant: () -> Unit
-) {
-    SectionCard {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = "강제 회전 모드",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "리모트 데스크톱처럼 방향을 고정하는 앱을 시스템 회전으로 강제합니다.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(checked = enabled, onCheckedChange = onToggle)
-        }
-        if (enabled && !writeSettingsGranted) {
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = "'설정 수정 허용' 권한이 필요합니다. (PC 연결 불필요)",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
-            )
-            Spacer(Modifier.height(8.dp))
-            Button(onClick = onGrant, modifier = Modifier.fillMaxWidth()) {
-                Text("설정 수정 허용하기")
             }
         }
     }

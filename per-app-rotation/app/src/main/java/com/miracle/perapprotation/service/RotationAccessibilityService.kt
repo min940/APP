@@ -109,8 +109,10 @@ class RotationAccessibilityService : AccessibilityService() {
         // A target app came forward by ANY means (its own icon, recents, a notification — not just
         // our shortcut). Start whole-screen linked mode for it so the rotation / auto-rotate
         // hand-over happens exactly as it does from the shortcut.
+        // Any app with a saved orientation rule drives the whole-screen engine — no extra switch to
+        // get wrong. (The legacy overlay path below only runs for apps without a rule.)
         val rule = rules[packageName]
-        if (rule != null && rule.requiresOverlay && forceRotation) {
+        if (rule != null && rule.requiresOverlay) {
             val useAuto = settings.linkedUseAutoRotate
             WatchState.start(packageName, rule, Orientation.PORTRAIT, useAuto)
             LogRepository.info(
