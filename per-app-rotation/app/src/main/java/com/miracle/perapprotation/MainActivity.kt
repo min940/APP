@@ -156,7 +156,12 @@ private fun AppRoot() {
             when (selectedTab) {
                 Tab.ROTATE -> RotationToggleScreen(
                     writeSettingsGranted = permissions.writeSettings,
-                    onGrantWriteSettings = { PermissionUtils.openWriteSettings(context) }
+                    onGrantWriteSettings = { PermissionUtils.openWriteSettings(context) },
+                    ruledApps = rules.map { (pkg, orientation) ->
+                        val label = apps.firstOrNull { it.packageName == pkg }?.label ?: pkg
+                        label to orientation.label
+                    }.sortedBy { it.first },
+                    onGoToApps = { selectedTab = Tab.HOME }
                 )
 
                 Tab.HOME -> MainScreen(

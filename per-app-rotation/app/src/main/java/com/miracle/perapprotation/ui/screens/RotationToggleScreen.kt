@@ -44,6 +44,9 @@ private const val REMOTE_DESKTOP_PACKAGE = "com.google.chromeremotedesktop"
 fun RotationToggleScreen(
     writeSettingsGranted: Boolean,
     onGrantWriteSettings: () -> Unit,
+    /** Apps that currently have an orientation rule: label to orientation label. */
+    ruledApps: List<Pair<String, String>>,
+    onGoToApps: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -171,10 +174,53 @@ fun RotationToggleScreen(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "홈 화면 바로가기로 앱을 열 때의 동작입니다. 앱을 벗어나면 항상 세로로 고정 복귀합니다.",
+                text = "아래 지정된 앱이 화면에 뜨면 자동으로 회전하고, 벗어나면 세로로 고정 복귀합니다.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Spacer(Modifier.height(10.dp))
+            // Which apps this actually applies to — set in the "앱별" tab.
+            if (ruledApps.isEmpty()) {
+                Text(
+                    text = "⚠️ 지정된 앱이 없습니다. 회전할 앱을 먼저 지정하세요.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = onGoToApps, modifier = Modifier.fillMaxWidth()) {
+                    Text("앱 지정하러 가기")
+                }
+            } else {
+                Text(
+                    text = "지정된 앱",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                ruledApps.forEach { (label, orientation) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "• $label",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = orientation,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onGoToApps, modifier = Modifier.fillMaxWidth()) {
+                    Text("앱 지정 변경")
+                }
+            }
+
             Spacer(Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
