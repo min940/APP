@@ -6,6 +6,7 @@ import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import com.miracle.perapprotation.data.LogRepository
 import com.miracle.perapprotation.data.Orientation
+import com.miracle.perapprotation.data.RotationSettings
 import com.miracle.perapprotation.data.RuleRepository
 import com.miracle.perapprotation.widget.GlobalRotation
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,7 @@ class RotationAccessibilityService : AccessibilityService() {
     private lateinit var controller: OverlayOrientationController
     private lateinit var forcedController: ForcedRotationController
     private lateinit var ruleRepository: RuleRepository
+    private lateinit var settings: RotationSettings
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -63,6 +65,7 @@ class RotationAccessibilityService : AccessibilityService() {
         controller = OverlayOrientationController(this)
         forcedController = ForcedRotationController(this)
         ruleRepository = RuleRepository.get(this)
+        settings = RotationSettings(this)
         homePackage = resolveHomePackage()
 
         // Keep the rule cache in sync with DataStore.
@@ -99,9 +102,24 @@ class RotationAccessibilityService : AccessibilityService() {
         // should not be treated as "the user left the target app".
         if (!isLaunchable(packageName)) return
 
-        // Linked-app (whole-screen) mode: a shortcut rotated the screen and launched a target app.
-        // Keep landscape while it is foreground; revert to portrait as soon as it leaves.
+        // Linked-app (whole-screen) mode: keep the configured rotation while the target app is in
+        // the foreground; revert to portrait as soon as it leaves.
         if (handleWatchedApp(packageName)) return
+
+        // A target app came forward by ANY means (its own icon, recents, a notification — not just
+        // our shortcut). Start whole-screen linked mode for it so the rotation / auto-rotate
+        // hand-over happens exactly as it does from the shortcut.
+        val rule = rules[packageName]
+        if (rule != null && rule.requiresOverlay && forceRotation) {
+            val useAuto = settings.linkedUseAutoRotate
+            WatchState.start(packageName, rule, Orientation.PORTRAIT, useAuto)
+            LogRepository.info(
+                "$packageName 감지 → ${rule.label}${if (useAuto) " 후 자동회전" else " 고정"}"
+            )
+            lastPackage = packageName
+            handleWatchedApp(packageName)
+            return
+        }
 
         // Phantom-event guard: right after forcing a rotation, the rotation itself makes
         // background windows (launcher, wallpaper) briefly report as foreground. While a forced
