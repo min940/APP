@@ -41,6 +41,32 @@ object PermissionUtils {
     /** True when the app may write system settings (needed for the forced-rotation engine). */
     fun canWriteSettings(context: Context): Boolean = Settings.System.canWrite(context)
 
+    /** Opens display settings, where One UI keeps the per-app "Full screen apps" toggle. */
+    fun openDisplaySettings(context: Context) {
+        val intent = Intent(Settings.ACTION_DISPLAY_SETTINGS)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(intent)
+        } catch (_: Throwable) {
+            context.startActivity(
+                Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+    }
+
+    /** Opens the system app-info page for [packageName] (aspect-ratio / display options live here). */
+    fun openAppInfo(context: Context, packageName: String) {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.parse("package:$packageName")
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(intent)
+        } catch (_: Throwable) {
+            openDisplaySettings(context)
+        }
+    }
+
     fun openWriteSettings(context: Context) {
         val intent = Intent(
             Settings.ACTION_MANAGE_WRITE_SETTINGS,

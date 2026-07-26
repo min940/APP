@@ -17,6 +17,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,8 +32,11 @@ import androidx.compose.ui.unit.dp
 import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.data.RotationSettings
 import com.miracle.perapprotation.ui.components.SectionCard
+import com.miracle.perapprotation.util.PermissionUtils
 import com.miracle.perapprotation.widget.GlobalRotation
 import com.miracle.perapprotation.widget.RotationWidgetProvider
+
+private const val REMOTE_DESKTOP_PACKAGE = "com.google.chromeremotedesktop"
 
 @Composable
 fun RotationToggleScreen(
@@ -150,6 +154,51 @@ fun RotationToggleScreen(
                     )
                 }
             }
+        }
+
+        // Fullscreen helper (Android does not allow forcing another app into immersive mode).
+        SectionCard {
+            Text(
+                "전체화면으로 쓰기",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "안드로이드는 다른 앱을 강제로 전체화면으로 바꿀 수 없어, 아래 두 곳에서 설정해야 합니다.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = "① 원격 데스크톱 앱 안에서\n화면 위쪽 가운데의 ∨(아래 화살표)를 눌러 도구막대를 열고, 옵션에서 '전체 화면'을 켜세요. 화면에 맞추려면 '화면 크기 조절'도 함께 사용하세요.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = "② 삼성 전체 화면 앱 설정\n설정 > 디스플레이 > 전체 화면 앱 → '원격 데스크톱'을 켜면 상단 바 영역까지 사용합니다.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(12.dp))
+            Button(
+                onClick = { PermissionUtils.openDisplaySettings(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("디스플레이 설정 열기")
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = { PermissionUtils.openAppInfo(context, REMOTE_DESKTOP_PACKAGE) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("원격 데스크톱 앱 정보 열기")
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "좌우 검은 여백은 PC 화면 비율(16:9)과 폰 화면 비율이 달라 생깁니다. 원격 데스크톱의 '화면에 맞추기'로 줄일 수 있습니다.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         // Widget how-to
