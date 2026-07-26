@@ -217,7 +217,9 @@ class RotationAccessibilityService : AccessibilityService() {
 
         // The watched app left the foreground → revert to portrait immediately and stop watching.
         GlobalRotation.apply(this, WatchState.revertOrientation)
-        LogRepository.info("$watched 이탈 → ${WatchState.revertOrientation.label} 복귀")
+        LogRepository.info(
+            "$watched 이탈 → ${WatchState.revertOrientation.label} 복귀(자동회전 끔)"
+        )
         WatchState.stop()
         lastPackage = packageName
         return true

@@ -39,7 +39,12 @@ class LaunchShortcutActivity : ComponentActivity() {
         val ruleOrientation = runCatching {
             runBlocking { RuleRepository.get(this@LaunchShortcutActivity).rulesFlow.first()[pkg] }
         }.getOrNull()
-        val landscape = ruleOrientation?.takeIf { it.requiresOverlay } ?: settings.onOrientation
+        // Either turn auto-rotate ON while the app is open (DEFAULT), or lock a fixed landscape.
+        val landscape = if (settings.linkedUseAutoRotate) {
+            Orientation.DEFAULT
+        } else {
+            ruleOrientation?.takeIf { it.requiresOverlay } ?: settings.onOrientation
+        }
         // Linked mode always returns to locked portrait on exit (per the requested behaviour),
         // so leaving the app can't land on auto-rotate reverse-landscape.
         val revert = Orientation.PORTRAIT
@@ -59,7 +64,8 @@ class LaunchShortcutActivity : ComponentActivity() {
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
                 startActivity(launch)
-                LogRepository.info("연동 실행: $pkg → ${landscape.label}")
+                val mode = if (landscape == Orientation.DEFAULT) "자동회전 켬" else landscape.label
+                LogRepository.info("연동 실행: $pkg → $mode")
             } catch (t: Throwable) {
                 LogRepository.error("바로가기 실행 실패: ${t.message}")
                 WatchState.stop()

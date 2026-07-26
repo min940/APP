@@ -18,6 +18,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +51,7 @@ fun RotationToggleScreen(
     var isOn by remember { mutableStateOf(settings.isOn) }
     var onOrientation by remember { mutableStateOf(settings.onOrientation) }
     var offOrientation by remember { mutableStateOf(settings.offOrientation) }
+    var linkedAuto by remember { mutableStateOf(settings.linkedUseAutoRotate) }
 
     val current = if (isOn) onOrientation else offOrientation
     val nextLabel = (if (isOn) offOrientation else onOrientation).displayLabel()
@@ -153,6 +155,45 @@ fun RotationToggleScreen(
                         label = { Text(option.displayLabel()) }
                     )
                 }
+            }
+        }
+
+        // Linked-app (shortcut) behaviour
+        SectionCard {
+            Text(
+                "앱 연동 바로가기 동작",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "홈 화면 바로가기로 앱을 열 때의 동작입니다. 앱을 벗어나면 항상 세로로 고정 복귀합니다.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("자동 회전 사용", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = if (linkedAuto)
+                            "앱 실행 중에는 자동 회전이 켜져 폰을 돌리는 대로 따라갑니다."
+                        else
+                            "앱 실행 중 지정한 방향(${onOrientation.displayLabel()})으로 고정합니다.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = linkedAuto,
+                    onCheckedChange = {
+                        linkedAuto = it
+                        settings.linkedUseAutoRotate = it
+                    }
+                )
             }
         }
 

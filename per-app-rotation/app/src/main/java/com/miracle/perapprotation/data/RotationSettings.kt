@@ -33,6 +33,17 @@ class RotationSettings(context: Context) {
             prefs.edit().putBoolean(KEY_IS_ON, value).apply()
         }
 
+    /**
+     * Linked-app mode: when true, launching the target app turns Samsung's auto-rotate ON (so the
+     * screen follows how you hold the phone) instead of locking a fixed landscape. Leaving the app
+     * always returns to locked portrait.
+     */
+    var linkedUseAutoRotate: Boolean
+        get() = prefs.getBoolean(KEY_LINKED_AUTO, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_LINKED_AUTO, value).apply()
+        }
+
     /** The last tab the user was on, restored on next launch. */
     var lastTab: String?
         get() = prefs.getString(KEY_LAST_TAB, null)
@@ -45,5 +56,6 @@ class RotationSettings(context: Context) {
         const val KEY_OFF = "off_orientation"
         const val KEY_IS_ON = "is_on"
         const val KEY_LAST_TAB = "last_tab"
+        const val KEY_LINKED_AUTO = "linked_use_auto_rotate"
     }
 }
