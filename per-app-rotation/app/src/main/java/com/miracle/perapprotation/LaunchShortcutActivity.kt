@@ -34,12 +34,10 @@ class LaunchShortcutActivity : ComponentActivity() {
         val settings = RotationSettings(this)
         // Read only synchronous SharedPreferences here — never block the main thread on DataStore,
         // which previously could stall the shortcut and make it appear to do nothing.
-        val landscape = if (settings.linkedUseAutoRotate) {
-            // Turn auto-rotate ON while the app is open.
-            Orientation.DEFAULT
-        } else {
-            settings.onOrientation
-        }
+        // Always open in the configured landscape so the rotation is immediate. When auto-rotate is
+        // enabled, the service hands over to auto-rotate a few seconds later.
+        val landscape = settings.onOrientation
+        val useAutoRotate = settings.linkedUseAutoRotate
         // Linked mode always returns to locked portrait on exit (per the requested behaviour),
         // so leaving the app can't land on auto-rotate reverse-landscape.
         val revert = Orientation.PORTRAIT
@@ -54,14 +52,14 @@ class LaunchShortcutActivity : ComponentActivity() {
         }
 
         // Ask the accessibility service to revert to portrait when the app leaves the foreground.
-        WatchState.start(pkg, landscape, revert)
+        WatchState.start(pkg, landscape, revert, useAutoRotate)
 
         val launch = packageManager.getLaunchIntentForPackage(pkg)
         if (launch != null) {
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
                 startActivity(launch)
-                val mode = if (landscape == Orientation.DEFAULT) "자동회전 켬" else landscape.label
+                val mode = if (useAutoRotate) "${landscape.label} 후 자동회전" else landscape.label
                 LogRepository.info("연동 실행: $pkg → $mode")
             } catch (t: Throwable) {
                 LogRepository.error("바로가기 실행 실패: ${t.message}")

@@ -55,6 +55,9 @@ class RotationAccessibilityService : AccessibilityService() {
     /** Until this uptime (ms), ignore non-watched apps in linked mode (launch/rotation churn). */
     private var watchSuppressUntil = 0L
 
+    /** Delayed hand-over from the initial landscape lock to Samsung's auto-rotate. */
+    private var autoRotateJob: Job? = null
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         controller = OverlayOrientationController(this)
@@ -204,8 +207,17 @@ class RotationAccessibilityService : AccessibilityService() {
         forcedController.forget()
 
         if (packageName == watched) {
-            // Keep the screen in landscape (recover if the app reset it).
-            GlobalRotation.apply(this, WatchState.landscapeOrientation)
+            if (WatchState.useAutoRotate) {
+                // Open in landscape first, then hand the screen over to Samsung's auto-rotate so it
+                // follows how the phone is held for the rest of the session.
+                if (!WatchState.autoRotateHandedOver) {
+                    GlobalRotation.apply(this, WatchState.landscapeOrientation)
+                    scheduleAutoRotateHandover(watched)
+                }
+            } else {
+                // Keep the screen locked in landscape (recover if the app reset it).
+                GlobalRotation.apply(this, WatchState.landscapeOrientation)
+            }
             WatchState.markSeen()
             // Only a short window to absorb the phantom churn caused by re-applying the rotation.
             watchSuppressUntil = now + WATCH_POST_APPLY_MS
@@ -221,6 +233,7 @@ class RotationAccessibilityService : AccessibilityService() {
         }
 
         // The watched app left the foreground → revert to portrait immediately and stop watching.
+        autoRotateJob?.cancel()
         GlobalRotation.apply(this, WatchState.revertOrientation)
         LogRepository.info(
             "$watched 이탈 → ${WatchState.revertOrientation.label} 복귀(자동회전 끔)"
@@ -228,6 +241,22 @@ class RotationAccessibilityService : AccessibilityService() {
         WatchState.stop()
         lastPackage = packageName
         return true
+    }
+
+    /**
+     * After the linked app has settled in landscape, turns Samsung's auto-rotate ON so the screen
+     * follows the phone from then on. Skipped if the user already left the app.
+     */
+    private fun scheduleAutoRotateHandover(watched: String) {
+        if (WatchState.autoRotateHandedOver) return
+        WatchState.autoRotateHandedOver = true
+        autoRotateJob?.cancel()
+        autoRotateJob = scope.launch {
+            delay(AUTO_ROTATE_HANDOVER_MS)
+            if (WatchState.watchedPackage != watched) return@launch
+            GlobalRotation.apply(this@RotationAccessibilityService, Orientation.DEFAULT)
+            LogRepository.info("$watched → 자동회전 켬")
+        }
     }
 
     /**
@@ -265,5 +294,6 @@ class RotationAccessibilityService : AccessibilityService() {
         private const val REASSERT_INTERVAL_MS = 500L
         private const val WATCH_START_GRACE_MS = 1500L
         private const val WATCH_POST_APPLY_MS = 800L
+        private const val AUTO_ROTATE_HANDOVER_MS = 3000L
     }
 }

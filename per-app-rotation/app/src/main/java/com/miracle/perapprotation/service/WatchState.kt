@@ -34,10 +34,30 @@ object WatchState {
     var seen: Boolean = false
         private set
 
-    fun start(packageName: String, landscape: Orientation, revert: Orientation) {
+    /**
+     * When true, the screen is first locked to [landscapeOrientation] (so the app opens in
+     * landscape right away) and then auto-rotate is switched on a few seconds later, so the screen
+     * follows how the phone is held for the rest of the session.
+     */
+    @Volatile
+    var useAutoRotate: Boolean = false
+        private set
+
+    /** True once auto-rotate has been handed over, so it is only switched on once. */
+    @Volatile
+    var autoRotateHandedOver: Boolean = false
+
+    fun start(
+        packageName: String,
+        landscape: Orientation,
+        revert: Orientation,
+        useAutoRotate: Boolean
+    ) {
         watchedPackage = packageName
         landscapeOrientation = landscape
         revertOrientation = revert
+        this.useAutoRotate = useAutoRotate
+        autoRotateHandedOver = false
         startedUptime = SystemClock.uptimeMillis()
         seen = false
     }
@@ -49,5 +69,6 @@ object WatchState {
     fun stop() {
         watchedPackage = null
         seen = false
+        autoRotateHandedOver = false
     }
 }

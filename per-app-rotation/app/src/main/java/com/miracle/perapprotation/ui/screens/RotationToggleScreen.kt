@@ -184,9 +184,9 @@ fun RotationToggleScreen(
                     Text("자동 회전 사용", style = MaterialTheme.typography.bodyLarge)
                     Text(
                         text = if (linkedAuto)
-                            "앱 실행 중에는 자동 회전이 켜져 폰을 돌리는 대로 따라갑니다."
+                            "${onOrientation.displayLabel()}로 먼저 돌린 뒤, 3초 후 자동 회전으로 전환되어 폰을 돌리는 대로 따라갑니다."
                         else
-                            "앱 실행 중 지정한 방향(${onOrientation.displayLabel()})으로 고정합니다.",
+                            "앱 실행 중 ${onOrientation.displayLabel()}로 계속 고정합니다. (가장 확실)",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
