@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import com.miracle.perapprotation.data.LogRepository
 import com.miracle.perapprotation.rotation.AutoRotate
+import com.miracle.perapprotation.widget.StartWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -124,6 +125,7 @@ class ExitWatchService : AccessibilityService() {
         SessionState.stop()
         lastIgnored = null
         AutoRotate.disableToPortrait(this)
+        StartWidgetProvider.refresh(this)
         LogRepository.info("$target 종료($reason) → 자동회전 끔 · 세로 복귀")
     }
 

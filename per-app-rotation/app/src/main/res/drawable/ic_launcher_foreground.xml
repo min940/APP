@@ -3,14 +3,36 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Material "screen rotation" glyph, scaled and centered inside the adaptive safe zone. -->
-    <group
-        android:scaleX="2.6"
-        android:scaleY="2.6"
-        android:translateX="22.8"
-        android:translateY="22.8">
+    <!--
+        "Auto-rotate launcher": a circular rotation arrow (two stroked arcs + arrowheads) wrapping a
+        play/launch triangle. Geometry is centred on (54,54) and stays inside the 72dp adaptive-icon
+        safe zone.
+    -->
+    <group android:translateX="54" android:translateY="54">
+
+        <!-- Rotation arcs -->
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="7"
+            android:strokeLineCap="butt"
+            android:pathData="M 22.12,-15.49 A 27,27 0 0 1 -11.41,24.47" />
+        <path
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="7"
+            android:strokeLineCap="butt"
+            android:pathData="M -22.12,15.49 A 27,27 0 0 1 11.41,-24.47" />
+
+        <!-- Arrowheads, tangent to each arc end -->
         <path
             android:fillColor="#FFFFFF"
-            android:pathData="M16.48,2.52c3.27,1.55 5.61,4.72 5.97,8.48h1.5C23.44,4.84 18.29,0 12,0l-0.66,0.03 3.81,3.81 1.33,-1.32zM10.23,1.75c-0.59,-0.59 -1.54,-0.59 -2.12,0L1.75,8.11c-0.59,0.59 -0.59,1.54 0,2.12l12.02,12.02c0.59,0.59 1.54,0.59 2.12,0l6.36,-6.36c0.59,-0.59 0.59,-1.54 0,-2.12L10.23,1.75zM14.83,21.19L2.81,9.17l6.36,-6.36 12.02,12.02 -6.36,6.36zM7.52,21.48C4.25,19.94 1.91,16.76 1.55,13h-1.5C0.56,19.16 5.71,24 12,24l0.66,-0.03 -3.81,-3.81 -1.33,1.32z" />
+            android:pathData="M -22.29,19.40 L -14.45,31.00 L -8.37,17.94 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M 22.29,-19.40 L 14.45,-31.00 L 8.37,-17.94 Z" />
+
+        <!-- Launch mark -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M -6,-9.5 L 10.5,0 L -6,9.5 Z" />
     </group>
 </vector>

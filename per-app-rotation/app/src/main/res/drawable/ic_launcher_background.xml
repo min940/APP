@@ -8,12 +8,17 @@
     <path android:pathData="M0,0 h108 v108 h-108 z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="6" android:startY="6"
-                android:endX="102" android:endY="102"
+                android:startX="10" android:startY="4"
+                android:endX="98" android:endY="104"
                 android:type="linear">
-                <item android:offset="0.0" android:color="#FF14B8A6" />
-                <item android:offset="1.0" android:color="#FF0F766E" />
+                <item android:offset="0.0" android:color="#FF1FD1BE" />
+                <item android:offset="0.55" android:color="#FF12A396" />
+                <item android:offset="1.0" android:color="#FF0A5F5A" />
             </gradient>
         </aapt:attr>
     </path>
+    <!-- Soft highlight so the icon reads well on dark and light wallpapers. -->
+    <path
+        android:pathData="M0,0 h108 v54 c-30,10 -78,10 -108,-8 z"
+        android:fillColor="#14FFFFFF" />
 </vector>

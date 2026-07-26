@@ -6,6 +6,7 @@ import com.miracle.perapprotation.data.AppSettings
 import com.miracle.perapprotation.data.LogRepository
 import com.miracle.perapprotation.rotation.AutoRotate
 import com.miracle.perapprotation.service.SessionState
+import com.miracle.perapprotation.widget.StartWidgetProvider
 
 /** Result of trying to start a session, so callers can show the right message. */
 enum class StartResult { STARTED, NO_TARGET, NO_PERMISSION, LAUNCH_FAILED }
@@ -34,6 +35,7 @@ object SessionStarter {
             launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(launch)
             LogRepository.success("${settings.targetLabel ?: pkg} 실행 → 자동회전 켬")
+            StartWidgetProvider.refresh(context)
             StartResult.STARTED
         } catch (t: Throwable) {
             SessionState.stop()
