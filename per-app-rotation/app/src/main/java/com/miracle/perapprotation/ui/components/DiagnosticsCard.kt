@@ -20,9 +20,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.miracle.perapprotation.data.Orientation
 import com.miracle.perapprotation.service.ServiceState
 import com.miracle.perapprotation.service.WatchState
 import com.miracle.perapprotation.util.PermissionUtils
+import com.miracle.perapprotation.widget.GlobalRotation
 
 /**
  * Live diagnostics: shows the exact system values the rotation engine depends on, so a
@@ -71,6 +73,28 @@ fun DiagnosticsCard(modifier: Modifier = Modifier) {
         DiagRow("연동 감시 중", watched ?: "없음", watched != null)
 
         Spacer(Modifier.height(10.dp))
+        // Direct test of the auto-rotate mechanism, independent of the app-linking flow.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    GlobalRotation.apply(context, Orientation.DEFAULT)
+                    refreshTick++
+                },
+                modifier = Modifier.weight(1f)
+            ) { Text("자동회전 켜기") }
+            OutlinedButton(
+                onClick = {
+                    GlobalRotation.apply(context, Orientation.PORTRAIT)
+                    refreshTick++
+                },
+                modifier = Modifier.weight(1f)
+            ) { Text("세로 고정") }
+        }
+
+        Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)

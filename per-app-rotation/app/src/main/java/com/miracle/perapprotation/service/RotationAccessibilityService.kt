@@ -254,8 +254,12 @@ class RotationAccessibilityService : AccessibilityService() {
         autoRotateJob = scope.launch {
             delay(AUTO_ROTATE_HANDOVER_MS)
             if (WatchState.watchedPackage != watched) return@launch
+            // Turning auto-rotate on makes the screen snap to however the phone is held, which
+            // fires window-state-changed for background windows. Suppress restores across that
+            // churn, otherwise we would immediately revert and auto-rotate would look "stuck off".
+            watchSuppressUntil = SystemClock.uptimeMillis() + AUTO_ROTATE_SETTLE_MS
             GlobalRotation.apply(this@RotationAccessibilityService, Orientation.DEFAULT)
-            LogRepository.info("$watched → 자동회전 켬")
+            LogRepository.success("$watched → 자동회전 켬")
         }
     }
 
@@ -295,5 +299,6 @@ class RotationAccessibilityService : AccessibilityService() {
         private const val WATCH_START_GRACE_MS = 1500L
         private const val WATCH_POST_APPLY_MS = 800L
         private const val AUTO_ROTATE_HANDOVER_MS = 3000L
+        private const val AUTO_ROTATE_SETTLE_MS = 2500L
     }
 }
