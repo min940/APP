@@ -34,8 +34,11 @@ class ExitWatchService : AccessibilityService() {
     /** Cache of packageName -> isLaunchable, so transient system windows are cheap to reject. */
     private val launchableCache = HashMap<String, Boolean>()
 
-    /** Home launcher package — the only foreground app that ends a session. */
-    private var homePackage: String? = null
+    /**
+     * Home launcher packages — the only foreground apps that end a session. Collected from every
+     * CATEGORY_HOME activity, so alternative launchers and the resolver are all covered.
+     */
+    private var homePackages: Set<String> = emptySet()
 
     /** Last package reported as an in-app switch, so it is only logged once. */
     private var lastIgnored: String? = null
@@ -51,10 +54,10 @@ class ExitWatchService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        homePackage = resolveHomePackage()
+        homePackages = resolveHomePackages()
         registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
         SessionState.setServiceConnected(true)
-        LogRepository.success("종료 감지 서비스 준비됨")
+        LogRepository.success("종료 감지 준비됨 (홈: ${homePackages.joinToString().ifEmpty { "확인 실패" }})")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -87,7 +90,10 @@ class ExitWatchService : AccessibilityService() {
         // Only going HOME (or the screen turning off) ends a session. Apps opened from inside the
         // target — Chrome custom tabs for sign-in, file pickers, the camera — are part of the flow,
         // not an exit. Switching apps via recents passes through the launcher, so that still ends it.
-        if (packageName != homePackage) {
+        // If home packages could not be resolved, fall back to treating any app switch as an exit
+        // so a session can never get stuck with auto-rotate left on.
+        val isHome = if (homePackages.isEmpty()) true else packageName in homePackages
+        if (!isHome) {
             if (lastIgnored != packageName) {
                 lastIgnored = packageName
                 LogRepository.info("$packageName 은 앱 내 전환으로 보고 유지")
@@ -121,18 +127,28 @@ class ExitWatchService : AccessibilityService() {
         LogRepository.info("$target 종료($reason) → 자동회전 끔 · 세로 복귀")
     }
 
-    private fun resolveHomePackage(): String? = try {
+    private fun resolveHomePackages(): Set<String> = try {
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-        packageManager.resolveActivity(intent, 0)?.activityInfo?.packageName
+        packageManager.queryIntentActivities(intent, 0)
+            .mapNotNull { it.activityInfo?.packageName }
+            .toSet()
     } catch (_: Throwable) {
-        null
+        emptySet()
     }
 
-    private fun isLaunchable(pkg: String): Boolean = launchableCache.getOrPut(pkg) {
-        try {
-            packageManager.getLaunchIntentForPackage(pkg) != null
-        } catch (_: Throwable) {
-            false
+    /**
+     * True for real apps AND for the home launcher. Launchers usually have no LAUNCHER-category
+     * activity of their own, so they must be allowed explicitly — otherwise pressing Home is
+     * filtered out and a session never ends.
+     */
+    private fun isLaunchable(pkg: String): Boolean {
+        if (pkg in homePackages) return true
+        return launchableCache.getOrPut(pkg) {
+            try {
+                packageManager.getLaunchIntentForPackage(pkg) != null
+            } catch (_: Throwable) {
+                false
+            }
         }
     }
 
