@@ -1,5 +1,7 @@
 package com.miracle.perapprotation
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -129,7 +131,12 @@ private fun AppRoot() {
                         }
                     },
                     onSaveLogs = vm::saveLogs,
-                    onClearLogs = vm::clearLogs
+                    onClearLogs = vm::clearLogs,
+                    onCopyLog = { text ->
+                        val clipboard = context.getSystemService(ClipboardManager::class.java)
+                        clipboard?.setPrimaryClip(ClipData.newPlainText("log", text))
+                        toast(context, "복사되었습니다")
+                    }
                 )
             }
         }

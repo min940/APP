@@ -34,6 +34,12 @@ class ExitWatchService : AccessibilityService() {
     /** Cache of packageName -> isLaunchable, so transient system windows are cheap to reject. */
     private val launchableCache = HashMap<String, Boolean>()
 
+    /** Home launcher package — the only foreground app that ends a session. */
+    private var homePackage: String? = null
+
+    /** Last package reported as an in-app switch, so it is only logged once. */
+    private var lastIgnored: String? = null
+
     /** Turning the screen off also ends the session. */
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -45,6 +51,7 @@ class ExitWatchService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        homePackage = resolveHomePackage()
         registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
         SessionState.setServiceConnected(true)
         LogRepository.success("종료 감지 서비스 준비됨")
@@ -65,14 +72,26 @@ class ExitWatchService : AccessibilityService() {
             SessionState.seen = true
             exitJob?.cancel()
             exitJob = null
+            lastIgnored = null
             return
         }
 
-        // Another app is in front. Ignore the launch churn before the target ever appeared —
-        // turning auto-rotate on makes background windows briefly report as foreground.
+        // Ignore the launch churn before the target ever appeared — turning auto-rotate on makes
+        // background windows briefly report as foreground.
         if (!SessionState.seen &&
             SystemClock.uptimeMillis() - SessionState.startedUptime < START_GRACE_MS
         ) {
+            return
+        }
+
+        // Only going HOME (or the screen turning off) ends a session. Apps opened from inside the
+        // target — Chrome custom tabs for sign-in, file pickers, the camera — are part of the flow,
+        // not an exit. Switching apps via recents passes through the launcher, so that still ends it.
+        if (packageName != homePackage) {
+            if (lastIgnored != packageName) {
+                lastIgnored = packageName
+                LogRepository.info("$packageName 은 앱 내 전환으로 보고 유지")
+            }
             return
         }
 
@@ -97,8 +116,16 @@ class ExitWatchService : AccessibilityService() {
         exitJob = null
         val target = SessionState.target.value
         SessionState.stop()
+        lastIgnored = null
         AutoRotate.disableToPortrait(this)
         LogRepository.info("$target 종료($reason) → 자동회전 끔 · 세로 복귀")
+    }
+
+    private fun resolveHomePackage(): String? = try {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        packageManager.resolveActivity(intent, 0)?.activityInfo?.packageName
+    } catch (_: Throwable) {
+        null
     }
 
     private fun isLaunchable(pkg: String): Boolean = launchableCache.getOrPut(pkg) {

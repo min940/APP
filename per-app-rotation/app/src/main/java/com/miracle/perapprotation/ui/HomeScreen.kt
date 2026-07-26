@@ -1,5 +1,6 @@
 package com.miracle.perapprotation.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ fun HomeScreen(
     onStart: () -> Unit,
     onSaveLogs: () -> Unit,
     onClearLogs: () -> Unit,
+    onCopyLog: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -114,7 +116,7 @@ fun HomeScreen(
             )
         }
 
-        // 5. Log
+        // 5. Log — tap any line to copy it, or copy the whole log at once.
         Section(title = "기록") {
             if (logs.isEmpty()) {
                 Text(
@@ -123,17 +125,35 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                logs.takeLast(12).reversed().forEach { entry ->
+                Text(
+                    text = "줄을 누르면 복사됩니다.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(4.dp))
+                logs.takeLast(20).reversed().forEach { entry ->
+                    val line = "[${entry.timeStamp}] ${entry.message}"
                     Text(
-                        text = "[${entry.timeStamp}] ${entry.message}",
+                        text = line,
                         style = MaterialTheme.typography.labelSmall,
                         color = logColor(entry),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onCopyLog(line) }
+                            .padding(vertical = 3.dp)
                     )
                 }
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = {
+                        onCopyLog(
+                            logs.joinToString("\n") { "[${it.timeStamp}] ${it.message}" }
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { Text("전체 복사") }
                 TextButton(onClick = onSaveLogs, modifier = Modifier.weight(1f)) { Text("저장") }
                 TextButton(onClick = onClearLogs, modifier = Modifier.weight(1f)) { Text("지우기") }
             }
